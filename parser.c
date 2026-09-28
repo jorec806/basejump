@@ -1,11 +1,4 @@
-/*
- * References:
- * - OpenAI ChatGPT (GPT-5 Thinking), 23 Aug 2025.
- *   Assistance: CLI parsing edge cases (argv spacing, exact strtol checks),
- *   Usage-on-stderr+exit codes, test cases, and toolHistory format template.
- *   Integration: guidance only; I wrote the code.
- *   Affected areas: parse_args(), check_valid_base(), obases parsing,
- */
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,34 +17,31 @@ static int parse_inbase(char* inbaseArg, int* inbaseOut);
 static int check_valid_base(char* str, int* result);
 static void default_args(Config* parsedArgs);
 
-/**
- * Parses CLI options (--inbase, --obases, --inputfile) and fills parsedArgs.
- * Applies defaults via default_args() when no user arguments are supplied.
- *
- * Params:
- *  - argc, argv: command-line arguments.
- *  - parsedArgs: output; not NULL.
- * Returns:
- *  - PARSE_OK on success; PARSE_ERROR if any constraint is violated
- *    (missing pairs, repeated/unknown options, invalid values).
- */
+int is_valid_letter(int digit, int base);
+int is_valid_number(int digit, int base);
+int is_valid_operator(int digit);
+int is_valid_expr_for_base(int digit, int base);
+int evaluate_expression(const char* expr, unsigned long long* result);
+char* convert_any_base_to_base_ten(const char* input, int base);
+char* convert_int_to_str_any_base(const char* input, int base);
+char* convert_expression(const char* expr, int inputBase, int outputBase);
+unsigned long long convert_str_to_any_base(const char* input, int base);
+
 int parse_args(int argc, char** argv, Config* parsedArgs)
 {
-    // 1. Check all constraints
+
     int constraints = args_constraints(argc, argv, parsedArgs);
     if (constraints != PARSE_OK) {
         return constraints;
     }
 
-    // 2. Populate Config
-    // DEFAULT
     default_args(parsedArgs);
 
     char* inbaseArg;
     char* obasesArg;
 
     for (int x = 1; x < argc; x++) {
-        // INBASE
+
         if (strcmp(argv[x], "--inbase") == 0) {
             inbaseArg = argv[x + 1];
             int inbase = parse_inbase(inbaseArg, &parsedArgs->inbase);
@@ -61,7 +51,6 @@ int parse_args(int argc, char** argv, Config* parsedArgs)
             }
         }
 
-        // OBASES
         if (strcmp(argv[x], "--obases") == 0) {
             obasesArg = argv[x + 1];
             int obases = parse_obases(
@@ -72,7 +61,6 @@ int parse_args(int argc, char** argv, Config* parsedArgs)
             }
         }
 
-        // INPUTFILE
         if (strcmp(argv[x], "--inputfile") == 0) {
             parsedArgs->inputfile = argv[x + 1];
         }
@@ -81,13 +69,6 @@ int parse_args(int argc, char** argv, Config* parsedArgs)
     return PARSE_OK;
 }
 
-/**
- * Sets default values in parsedArgs when no user arguments are provided.
- *
- * Params:
- *  - argc: number of arguments.
- *  - parsedArgs: output; not NULL.
- */
 static void default_args(Config* parsedArgs)
 {
     parsedArgs->inbase = DEFAULT_IN_BASE;
@@ -98,34 +79,12 @@ static void default_args(Config* parsedArgs)
     parsedArgs->inputfile = NULL;
 }
 
-/**
- * Validates and converts inbaseArg to a base-10 integer in
- * [MIN_BASE..MAX_BASE].
- *
- * Params:
- *  - inbaseArg: input string; not NULL.
- *  - inbaseOut: output integer; not NULL.
- * Returns:
- *  - PARSE_OK if valid; PARSE_ERROR otherwise.
- */
 static int parse_inbase(char* inbaseArg, int* inbaseOut)
 {
     int isValidBase = check_valid_base(inbaseArg, inbaseOut);
     return isValidBase;
 }
 
-/**
- * Checks that str is a comma-separated list of decimal integers:
- * - only digits and ',' characters,
- * - no leading/trailing comma,
- * - no empty fields (no consecutive commas),
- * - not empty.
- *
- * Params:
- *  - str: input string; not NULL.
- * Returns:
- *  - PARSE_OK if the format is valid; PARSE_ERROR otherwise.
- */
 static int validate_obases_format(char* str)
 {
     int commaFlag = 0;
@@ -158,28 +117,15 @@ static int validate_obases_format(char* str)
     return PARSE_OK;
 }
 
-/**
- * Parses a comma-separated list of bases, validates range [MIN_BASE..MAX_BASE],
- * rejects duplicates, and writes the results and count.
- *
- * Params:
- *  - obaseArg: input string; not NULL.
- *  - obaseOut: output array of bases; not NULL.
- *  - numbases: number of bases written to obaseOut; not NULL.
- * Returns:
- *  - PARSE_OK on success; PARSE_ERROR on invalid format, out-of-range value,
- *    or duplicate entries.
- */
 int parse_obases(char* obaseArg, int* obaseOut, size_t* numbases)
 {
-    // Validate str with only "," or digits
+
     int validStr = validate_obases_format(obaseArg);
 
     if (validStr != PARSE_OK) {
         return PARSE_ERROR;
     }
 
-    // Generate array with all bases
     int counter = 0;
     int argLen = strlen(obaseArg);
     char* obaseCopy = malloc(argLen + 1);
@@ -198,7 +144,6 @@ int parse_obases(char* obaseArg, int* obaseOut, size_t* numbases)
         counter++;
     }
 
-    // Check for duplicate numbers
     for (int x = 0; x < counter; x++) {
         for (int y = x + 1; y < counter; y++) {
             if (obaseOut[x] == obaseOut[y]) {
@@ -213,37 +158,22 @@ int parse_obases(char* obaseArg, int* obaseOut, size_t* numbases)
     return PARSE_OK;
 }
 
-/**
- * Validates overall argument structure:
- * - allows argc==1,
- * - requires (option,value) pairs,
- * - forbids unknown or repeated options,
- * - forbids empty-string arguments.
- *
- * Params:
- *  - argc, argv: command-line arguments.
- * Returns:
- *  - PARSE_OK if all checks pass; PARSE_ERROR otherwise.
- */
 static int args_constraints(int argc, char** argv, Config* cfg)
 {
-    // Check if there are no arguments
+
     if (argc == 1) {
         return PARSE_OK;
     }
 
-    // Check if every arg has a pair
     if (((argc - 1) % 2) != 0) {
         return PARSE_ERROR;
     }
 
-    // Check repeated Option Args
     int repeatedArgs = repeated_arg_constraint(argc, argv, cfg);
     if (repeatedArgs != PARSE_OK) {
         return repeatedArgs;
     }
 
-    // Check empty String Args
     int emptyArgs = empty_string_constraint(argc, argv);
     if (emptyArgs != PARSE_OK) {
         return emptyArgs;
@@ -252,16 +182,6 @@ static int args_constraints(int argc, char** argv, Config* cfg)
     return PARSE_OK;
 }
 
-/**
- * Ensures each allowed option (--inbase, --obases, --inputfile) appears at
- * most once and that no unknown options are present (expects option/value
- * pairs).
- *
- * Params:
- *  - argc, argv: command-line arguments.
- * Returns:
- *  - PARSE_OK if no repetitions/unknown options; PARSE_ERROR otherwise.
- */
 static int repeated_arg_constraint(int argc, char** argv, Config* cfg)
 {
     int inbaseCount = 0;
@@ -306,14 +226,6 @@ static int repeated_arg_constraint(int argc, char** argv, Config* cfg)
     return PARSE_OK;
 }
 
-/**
- * Checks that no argument equals the empty string "".
- *
- * Params:
- *  - argc, argv: command-line arguments.
- * Returns:
- *  - PARSE_OK if all are non-empty; PARSE_ERROR otherwise.
- */
 static int empty_string_constraint(int argc, char** argv)
 {
     for (int i = 1; i < argc; i++) {
@@ -325,25 +237,9 @@ static int empty_string_constraint(int argc, char** argv)
     return PARSE_OK;
 }
 
-/**
- * Validates that str is a complete decimal integer in [MIN_BASE..MAX_BASE]
- * with no leading sign and no leading/trailing whitespace; writes result.
- * Performs a quick pre-check for leading '+'/'-' or whitespace (via isspace)
- * before calling strtol.
- *
- * Params:
- *  - str: input string (may be NULL).
- *  - result: output integer; not NULL when expecting PARSE_OK.
- * Returns:
- *  - PARSE_OK if valid; PARSE_ERROR if NULL/empty, signed/whitespace-leading,
- *    non-numeric, or out of range.
- *
- * REF: Suggestion to pre-check leading sign/whitespace using isspace() before
- * REF: strtol came from ChatGPT (see toolHistory.txt, 2025-08-24).
- */
 static int check_valid_base(char* str, int* result)
 {
-    // check if it is numeric base 10
+
     if (!str || str[0] == '\0' || str[0] == '+' || str[0] == '-'
             || isspace((unsigned char)str[0])) {
         return PARSE_ERROR;
@@ -363,4 +259,86 @@ static int check_valid_base(char* str, int* result)
 
     *result = (int)convertNum;
     return PARSE_OK;
+}
+
+int is_valid_expr_for_base(char* expr, size_t len, int base)
+{
+    if (expr == NULL || expr[0] == '\0') return EXIT_ERROR;
+
+    for(size_t i = 0; i < len; i++) {
+        if(!(is_valid_letter(expr[i], base)
+                || is_valid_number(expr[i], base)
+                || is_valid_operator(expr[i]))){
+            return EXIT_ERROR;
+        }
+    }
+
+    return EXIT_OK;
+}
+
+int is_valid_letter(int digit, int base)
+{
+    if ('A' <= digit && digit <= 'Z') {
+        if ((digit - 'A' + DEFAULT_IN_BASE) < base) {
+            return EXIT_OK;
+        }
+    }
+
+    if ('a' <= digit && digit <= 'z') {
+        if ((digit - 'a' + DEFAULT_IN_BASE) < base) {
+            return EXIT_OK;
+        }
+    }
+
+    return EXIT_ERROR;
+}
+
+int is_valid_number(int digit, int base)
+{
+    if ('0' <= digit && digit <= '9') {
+        if ((digit - '0') < base) {
+            return EXIT_OK;
+        }
+    }
+
+    return EXIT_ERROR;
+}
+
+int is_valid_operator(int digit)
+{
+    if (digit == '+' || digit == '-' || digit == '*' || digit == '/') {
+        return EXIT_OK;
+    }
+
+    return EXIT_ERROR;
+}
+
+int evaluate_expression(const char* expr, unsigned long long* result)
+{
+    return 0;
+}
+
+char* convert_any_base_to_base_ten(const char* input, int base)
+{
+    return NULL;
+}
+
+char* convert_int_to_str_any_base(const char* input, int base)
+{
+    return NULL;
+}
+
+char* convert_expression(const char* expr, int inputBase, int outputBase)
+{
+    // setear las bases en algun lugar (10-36)
+    // crear un puntero en heap con un tamano fijo dijamos 10 chars
+    // iterar sobre la cadena 1 por uno
+    // detectar las letras
+    // cambiar las letras en nuestro heap
+    return NULL;
+} // Must be freed after use
+
+unsigned long long convert_str_to_any_base(const char* input, int base)
+{
+    return 0;
 }

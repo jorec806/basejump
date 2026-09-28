@@ -1,12 +1,6 @@
 #include <stdio.h>
 #include "parser.h"
 
-/* print_greetings()
- *  ------------------
- * Prints the program greeting banner.
- *
- * Returns: nothing
- */
 void print_greetings()
 {
     printf("Welcome to basejump!\n");
@@ -19,14 +13,6 @@ void print_instruction()
            " and evaluated.\n");
 }
 
-/* print_bases_info()
- * -------------------
- * Prints the input base and the list of output bases.
- *
- * config: execution configuration (inbase, obases[0..numBases-1], numBases).
- *
- * Returns: nothing
- */
 void print_bases_info(Config config)
 {
     printf("Input base: %d\n", config.inbase);

@@ -9,8 +9,7 @@ typedef struct Config {
     int obases[MAX_NUM_BASES];
     size_t numBases;
     char* inputfile;
-    // int hasInbase;
-    // int hasObases;
+
     int hasInputfile;
     History* history;
     int historySize;
@@ -18,5 +17,11 @@ typedef struct Config {
 
 int parse_args(int argc, char** argv, Config* parsedArgs);
 int parse_obases(char* obaseArg, int* obaseOut, size_t* numbases);
+
+int evaluate_expression(const char* expr, unsigned long long* result);
+char* convert_any_base_to_base_ten(const char* input, int base);
+char* convert_int_to_str_any_base(const char* input, int base);
+char* convert_expression(const char* expr, int inputBase, int outputBase);
+unsigned long long convert_str_to_any_base(const char* input, int base);
 
 #endif

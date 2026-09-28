@@ -18,23 +18,23 @@ program.o : program.c program.h parser.h constants.h
 parser.o : parser.c parser.h constants.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
-#filemode.o : filemode.c filemode.h constants.h parser.h
-#	$(CC) $(CFLAGS) -c $< -o $@
+filemode.o : filemode.c filemode.h constants.h parser.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-#outputs.o : outputs.c outputs.h parser.h
-#	$(CC) $(CFLAGS) -c $< -o $@
+outputs.o : outputs.c outputs.h parser.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
-#interactive.o : interactive.c interactive.h parser.h outputs.h constants.h
-#	$(CC) $(CFLAGS) -c $< -o $@
+interactive.o : interactive.c interactive.h parser.h outputs.h constants.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 #Linking process
 basejump : basejump.o program.o parser.o #filemode.o outputs.o interactive.o
-	$(CC) $(CFLAGS) $^  $(LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 
 .PHONY: debug clean
 
-debug: CFLAGS += -g -O0 -fsanitize=address,undefined
+debug: CFLAGS += -g -O0
 debug: clean basejump
 
 clean:
