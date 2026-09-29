@@ -6,7 +6,7 @@ CFLAGS = -Wall -Wextra -pedantic -std=gnu99
 LDFLAGS += -fsanitize=address,undefined
 
 # Specify the default target to run
-.DEFAULT_GOAL := basejump
+.DEFAULT_GOAL := test_parser
 
 #Compilation process
 basejump.o : main.c constants.h
@@ -28,9 +28,11 @@ interactive.o : interactive.c interactive.h parser.h outputs.h constants.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 #Linking process
-basejump : basejump.o program.o parser.o #filemode.o outputs.o interactive.o
-	$(CC) $(CFLAGS) $^ -o $@
+#basejump : basejump.o program.o parser.o #filemode.o outputs.o interactive.o
+#	$(CC) $(CFLAGS) $^ -o $@
 
+test_parser: test/test_parser.c parser.o
+	$(CC) $(CFLAGS) $^ -o $@
 
 .PHONY: debug clean
 
@@ -38,4 +40,4 @@ debug: CFLAGS += -g -O0
 debug: clean basejump
 
 clean:
-	rm -f basejump *.o
+	rm -f basejump test_parser *.o

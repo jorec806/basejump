@@ -1,11 +1,11 @@
-
-
 #include <stdio.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "parser.h"
 #include "constants.h"
+
 
 int parse_args(int argc, char** argv, Config* parsedArgs);
 int parse_obases(char* obaseArg, int* obaseOut, size_t* numbases);
@@ -20,7 +20,9 @@ static void default_args(Config* parsedArgs);
 int is_valid_letter(int digit, int base);
 int is_valid_number(int digit, int base);
 int is_valid_operator(int digit);
-int is_valid_expr_for_base(int digit, int base);
+int is_valid_expr_for_base(char* expr, size_t len, int base);
+int tokenizer(const char* str, const char* separators, Token** result, size_t* len);
+
 int evaluate_expression(const char* expr, unsigned long long* result);
 char* convert_any_base_to_base_ten(const char* input, int base);
 char* convert_int_to_str_any_base(const char* input, int base);
@@ -313,6 +315,80 @@ int is_valid_operator(int digit)
     return EXIT_ERROR;
 }
 
+int tokenizer(const char* str, const char* separators, Token** result, size_t* len)
+{
+    size_t str_index = 0;
+    size_t num_tokens = 0;
+    Token* tokens = NULL;
+    bool prev_sep = false;
+
+    for(int i = 0; str[i] != '\0'; i++){
+
+        // ver si es separador
+        for(int j = 0; separators[j] != '\0'; j++){
+            // un separador antes
+            if (str[i] == separators[j]){
+                // primer item del array (no hay nada)
+                if (str_index == 0) {
+                    tokens = realloc(tokens, (num_tokens + 1)*sizeof(*tokens));    
+                
+                    if (tokens == NULL){
+                        result = NULL;
+                        *len = 0;
+                        return EXIT_ERROR;
+                    }
+
+                    tokens[num_tokens].value = str + i;
+                    tokens[num_tokens].size = 1;
+
+                    str_index += i;
+                    num_tokens += 1;
+                    prev_sep = true;
+
+                    break;
+                }
+
+                // si hay un operador antes
+                if (prev_sep == true){ 
+                    tokens = realloc(tokens, (num_tokens + 1)*sizeof(*tokens));    
+                
+                    if (tokens == NULL){
+                        result = NULL;
+                        *len = 0;
+                        return EXIT_ERROR;
+                    }
+
+                    tokens[num_tokens].value = (str + i);
+                    tokens[num_tokens].size = 1;
+
+                    str_index += i;
+                    num_tokens += 1;
+                    prev_sep = true;
+
+                    break;
+                }
+
+                // Cualquier otro caso 
+                tokens = realloc(tokens, (num_tokens + 2)*sizeof(*tokens));
+                //Agrego el token previo
+                tokens[num_tokens].value = (str + str_index);
+                tokens[num_tokens].size = i - str_index; 
+
+                //Agrego el operador
+                tokens[num_tokens + 1].value = (str + i);
+                tokens[num_tokens + 1].size = 1;
+            }
+        }
+        
+        // Si no es separador
+
+    }
+
+    *result = tokens;
+    return EXIT_OK;
+}
+
+/*
 int evaluate_expression(const char* expr, unsigned long long* result)
 {
     return 0;
@@ -342,3 +418,5 @@ unsigned long long convert_str_to_any_base(const char* input, int base)
 {
     return 0;
 }
+
+*/

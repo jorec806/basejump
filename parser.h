@@ -15,8 +15,14 @@ typedef struct Config {
     int historySize;
 } Config;
 
+typedef struct Token {
+    const char* value;
+    size_t size;
+} Token;
+
 int parse_args(int argc, char** argv, Config* parsedArgs);
 int parse_obases(char* obaseArg, int* obaseOut, size_t* numbases);
+int tokenizer(const char* str, const char* separators, Token** result, size_t* len);
 
 int evaluate_expression(const char* expr, unsigned long long* result);
 char* convert_any_base_to_base_ten(const char* input, int base);
