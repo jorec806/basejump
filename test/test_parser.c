@@ -11,7 +11,7 @@ int main(void){
 }
 
 int test_tokenizer_simple_expr(void)
-{ 
+{
     char* str = "1+2-3";
     char* sep = "+-";
     Token* res = NULL;
@@ -19,10 +19,14 @@ int test_tokenizer_simple_expr(void)
 
     int result = tokenizer (str, sep, &res, &len);
 
-    if (result == EXIT_OK){
+    if (result == EXIT_OK && len == 5){
         printf("Test tokenizer - Simple Expression : Pass\n");
     } else {
         printf("Test tokenizer - Simple Expression : Fail\n");
+
+        if(len != 5){
+            printf("test len = 5 - function len = %zu\n", len);
+        }
     }
 
     return 0;

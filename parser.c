@@ -329,7 +329,7 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
             // un separador antes
             if (str[i] == separators[j]){
                 // primer item del array (no hay nada)
-                if (str_index == 0) {
+                if (i == 0) {
                     tokens = realloc(tokens, (num_tokens + 1)*sizeof(*tokens));    
                 
                     if (tokens == NULL){
@@ -338,7 +338,7 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
                         return EXIT_ERROR;
                     }
 
-                    tokens[num_tokens].value = str + i;
+                    tokens[num_tokens].value = str;
                     tokens[num_tokens].size = 1;
 
                     str_index += i;
@@ -361,7 +361,7 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
                     tokens[num_tokens].value = (str + i);
                     tokens[num_tokens].size = 1;
 
-                    str_index += i;
+                    str_index += i + 1;
                     num_tokens += 1;
                     prev_sep = true;
 
@@ -377,13 +377,20 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
                 //Agrego el operador
                 tokens[num_tokens + 1].value = (str + i);
                 tokens[num_tokens + 1].size = 1;
+
+                str_index += i + 1;
+                num_tokens += 2;
+                prev_sep = true;
+
+                break;
+            } else {
+                // Si no es separador
+                prev_sep = false;
             }
         }
-        
-        // Si no es separador
-
     }
 
+    *len = num_tokens;
     *result = tokens;
     return EXIT_OK;
 }

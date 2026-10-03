@@ -37,7 +37,7 @@ test_parser: test/test_parser.c parser.o
 .PHONY: debug clean
 
 debug: CFLAGS += -g -O0
-debug: clean basejump
+debug: clean test_parser #basejump
 
 clean:
 	rm -f basejump test_parser *.o
