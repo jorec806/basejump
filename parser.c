@@ -315,20 +315,39 @@ int is_valid_operator(int digit)
     return EXIT_ERROR;
 }
 
+static bool only_spaces(const char* str)
+{
+    if(*str == '\0'){
+        return false;
+    }
+
+    while(*str){
+        if(!(*str == ' ')){
+            return false;
+        }
+        str++;
+    }
+
+    return true;
+}
+
 int tokenizer(const char* str, const char* separators, Token** result, size_t* len)
 {
     size_t str_index = 0;
     size_t num_tokens = 0;
     Token* tokens = NULL;
     bool prev_sep = false;
+    // Check if str contains only spaces
+    if (only_spaces(str)){
+        *result = NULL;
+        *len = 0;
+        return 0;
+    }
 
     for(int i = 0; str[i] != '\0'; i++){
-
-        // ver si es separador
         for(int j = 0; separators[j] != '\0'; j++){
-            // un separador antes
+
             if (str[i] == separators[j]){
-                // primer item del array (no hay nada)
                 if (i == 0) {
                     tokens = realloc(tokens, (num_tokens + 1)*sizeof(*tokens));
 
