@@ -350,10 +350,7 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
     size_t str_index = 0;
     size_t num_tokens = 0;
     Token* tokens = NULL;
-    bool prev_sep = false;
-
     
-    // Check if str contains only spaces
     if (only_spaces(str)){
         *result = NULL;
         *len = 0;
@@ -362,7 +359,6 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
 
     for(int i = 0; str[i] != '\0'; i++){
         for(int j = 0; separators[j] != '\0'; j++){
-
             if (str[i] == separators[j]){
                 if (i == 0) {
                     if(allocator(&tokens, num_tokens + 1)){
@@ -376,7 +372,6 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
 
                     str_index = i + 1;
                     num_tokens += 1;
-                    prev_sep = true;
 
                     if(strlen(str) == 1){
                         *len = num_tokens;
@@ -387,7 +382,7 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
                     break;
                 }
 
-                if (prev_sep == true){
+                if ((int)str_index == i){
                     if(allocator(&tokens, num_tokens + 1)){
                         *result = NULL;
                         *len = 0;
@@ -399,8 +394,6 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
 
                     str_index = i + 1;
                     num_tokens += 1;
-                    prev_sep = true;
-
                     break;
                 }
                 
@@ -418,15 +411,11 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
 
                 str_index = i + 1;
                 num_tokens += 2;
-                prev_sep = true;
-
                 break;
-            } else {
-                prev_sep = false;
             }
         }
 
-        if (str[i+1] == '\0'){
+        if (str[i+1] == '\0' && (int)(str_index - 1) != i){
             if(allocator(&tokens, num_tokens + 1)){
                 *result = NULL;
                 *len = 0;
@@ -441,6 +430,8 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
             break;
         }
     }
+
+    // sacar el if final
 
     *len = num_tokens;
     *result = tokens;
