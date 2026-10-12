@@ -315,6 +315,20 @@ int is_valid_operator(int digit)
     return EXIT_ERROR;
 }
 
+static int allocator(Token** tokens, size_t len)
+{  
+    Token* temp = NULL;
+    temp = realloc(temp, sizeof(*temp) * len);
+    
+    if(temp == NULL){
+        free(*tokens);
+        return -1;
+    } 
+
+    *tokens = temp;    
+    return 0;
+}
+                
 static bool only_spaces(const char* str)
 {
     if(*str == '\0'){
@@ -337,6 +351,8 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
     size_t num_tokens = 0;
     Token* tokens = NULL;
     bool prev_sep = false;
+
+    
     // Check if str contains only spaces
     if (only_spaces(str)){
         *result = NULL;
@@ -349,10 +365,8 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
 
             if (str[i] == separators[j]){
                 if (i == 0) {
-                    tokens = realloc(tokens, (num_tokens + 1)*sizeof(*tokens));
-
-                    if (tokens == NULL){
-                        result = NULL;
+                    if(allocator(&tokens, num_tokens + 1)){
+                        *result = NULL;
                         *len = 0;
                         return -1;
                     }
@@ -364,15 +378,18 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
                     num_tokens += 1;
                     prev_sep = true;
 
+                    if(strlen(str) == 1){
+                        *len = num_tokens;
+                        *result = tokens;
+                        return 0;
+                    }
+
                     break;
                 }
 
-                // si hay un operador antes
                 if (prev_sep == true){
-                    tokens = realloc(tokens, (num_tokens + 1)*sizeof(*tokens));
-
-                    if (tokens == NULL){
-                        result = NULL;
+                    if(allocator(&tokens, num_tokens + 1)){
+                        *result = NULL;
                         *len = 0;
                         return -1;
                     }
@@ -386,14 +403,16 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
 
                     break;
                 }
+                
+                if(allocator(&tokens, num_tokens + 2)){
+                    *result = NULL;
+                    *len = 0;
+                    return -1;
+                }
 
-                // Cualquier otro caso
-                tokens = realloc(tokens, (num_tokens + 2)*sizeof(*tokens));
-                //Agrego el token previo
                 tokens[num_tokens].value = (str + str_index);
                 tokens[num_tokens].size = i - str_index;
 
-                //Agrego el operador
                 tokens[num_tokens + 1].value = (str + i);
                 tokens[num_tokens + 1].size = 1;
 
@@ -403,17 +422,17 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
 
                 break;
             } else {
-                // Si no es separador
                 prev_sep = false;
             }
         }
 
-        // si es el final del str
         if (str[i+1] == '\0'){
-            // si el ultimo char no es separador
+            if(allocator(&tokens, num_tokens + 1)){
+                *result = NULL;
+                *len = 0;
+                return -1;
+            }
 
-            tokens = realloc(tokens, (num_tokens + 1)*sizeof(*tokens));
-            //Agrego el token previo
             tokens[num_tokens].value = (str + str_index);
             tokens[num_tokens].size = i - str_index + 1;
 
