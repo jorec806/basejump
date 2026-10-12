@@ -431,8 +431,6 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
         }
     }
 
-    // sacar el if final
-
     *len = num_tokens;
     *result = tokens;
     return 0;
