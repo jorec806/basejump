@@ -318,7 +318,7 @@ int is_valid_operator(int digit)
 static int allocator(Token** tokens, size_t len)
 {  
     Token* temp = NULL;
-    temp = realloc(temp, sizeof(*temp) * len);
+    temp = realloc(*tokens, sizeof(*temp) * len);
     
     if(temp == NULL){
         free(*tokens);
