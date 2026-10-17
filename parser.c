@@ -436,6 +436,16 @@ int tokenizer(const char* str, const char* separators, Token** result, size_t* l
     return 0;
 }
 
+void free_tokenizer(Token* result)
+{
+    if(result == NULL){
+        return;
+    }
+
+    free(result);
+    result = NULL;
+}
+
 /*
 int evaluate_expression(const char* expr, unsigned long long* result)
 {
